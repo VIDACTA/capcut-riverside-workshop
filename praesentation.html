@@ -796,6 +796,7 @@
         @media (max-width: 768px) {
             .slide {
                 padding: 30px 20px 60px;
+                overflow-x: hidden;
                 overflow-y: auto;
                 justify-content: flex-start;
                 align-items: stretch;
@@ -2174,6 +2175,9 @@
         const current = slides[currentSlide];
         const next = slides[index];
 
+        // Reset scroll position so next slide starts at top
+        next.scrollTop = 0;
+
         // Exit current
         current.classList.remove('active');
         if (direction > 0) current.classList.add('exit-left');
@@ -2232,19 +2236,34 @@
         }
     });
 
-    // Touch support
+    // Touch support – distinguish horizontal swipe from vertical scroll
     let touchStartX = 0;
-    let touchEndX = 0;
+    let touchStartY = 0;
+    let isSwiping = false;
 
     document.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
+        touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
+        isSwiping = false;
     }, { passive: true });
 
+    document.addEventListener('touchmove', (e) => {
+        if (isSwiping) return;
+        const dx = Math.abs(e.changedTouches[0].clientX - touchStartX);
+        const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
+        // If horizontal movement is dominant, it's a swipe – block scroll
+        if (dx > 10 && dx > dy * 1.5) {
+            isSwiping = true;
+            e.preventDefault();
+        }
+    }, { passive: false });
+
     document.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        const diff = touchStartX - touchEndX;
-        if (Math.abs(diff) > 50) {
-            if (diff > 0) nextSlide();
+        const diffX = touchStartX - e.changedTouches[0].clientX;
+        const diffY = Math.abs(touchStartY - e.changedTouches[0].clientY);
+        // Only trigger slide change for clear horizontal swipes
+        if (Math.abs(diffX) > 50 && Math.abs(diffX) > diffY * 1.5) {
+            if (diffX > 0) nextSlide();
             else prevSlide();
         }
     }, { passive: true });
