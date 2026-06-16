@@ -834,19 +834,33 @@
             .nav-dots { display: none; }
             .slide-counter { bottom: 12px; right: 16px; font-size: 11px; }
 
-            /* Scrollable tables on mobile */
+            /* Global overflow prevention */
+            .slide-inner,
+            .slide-inner * {
+                max-width: 100%;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+            }
+
+            /* Tables: scrollable wrapper, but allow text wrapping in cells */
             .format-table,
             .shortcut-table {
                 display: block;
                 overflow-x: auto;
                 -webkit-overflow-scrolling: touch;
+                font-size: 0.72rem;
+            }
+            .format-table td,
+            .format-table th,
+            .shortcut-table td,
+            .shortcut-table th {
+                padding: 6px 8px;
                 white-space: nowrap;
-                font-size: 0.75rem;
             }
 
             .highlight-box { padding: 14px 16px; }
             .highlight-box h4 { font-size: 0.85rem; }
-            .highlight-box p { font-size: 0.8rem; }
+            .highlight-box p { font-size: 0.78rem; line-height: 1.5; white-space: normal; }
 
             .card { padding: 16px; }
             .card-icon { font-size: 1.8rem; }
@@ -861,7 +875,9 @@
             .checklist-item { padding: 10px 14px; font-size: 0.85rem; }
             .big-number { font-size: 3.5rem; }
 
-            .timeline-time { font-size: 0.75rem; min-width: 110px; }
+            /* Timeline: stack vertically */
+            .timeline-item { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .timeline-time { font-size: 0.75rem; min-width: auto; }
             .timeline-content h4 { font-size: 0.85rem; }
             .timeline-content p { font-size: 0.75rem; }
 
@@ -870,17 +886,26 @@
 
             .decorative-line { width: 60px; }
             .date-badge { font-size: 0.75rem; padding: 6px 14px; }
+
+            /* VS boxes */
+            .vs-box { padding: 18px 14px; }
+            .vs-box ul li { font-size: 0.78rem; }
+
+            /* Feature grid items */
+            .feature-item { padding: 10px 14px; font-size: 0.82rem; }
         }
 
         /* ═══ Small Phones ═══ */
         @media (max-width: 400px) {
-            .slide { padding: 20px 14px 50px; }
+            .slide { padding: 20px 10px 50px; }
             h1 { font-size: 1.5rem; }
             .title-slide h1 { font-size: 1.8rem; }
             h2 { font-size: 1.2rem; }
             .subtitle { font-size: 0.78rem; }
             .compression-step { min-width: 80px; padding: 10px 12px; }
             .compression-step .cs-size { font-size: 1.1rem; }
+            .col { padding: 12px; }
+            .highlight-box p { font-size: 0.72rem; }
         }
 
         /* ═══ Print ═══ */
