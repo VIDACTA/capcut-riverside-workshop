@@ -2143,7 +2143,6 @@
     const slideCounter = document.getElementById('slideCounter');
     const navDotsContainer = document.getElementById('navDots');
     let currentSlide = 0;
-    let isAnimating = false;
 
     // Create navigation dots
     slides.forEach((_, i) => {
@@ -2167,9 +2166,31 @@
         });
     }
 
+    let animationTimer = null;
+
+    function cleanupAllSlides() {
+        slides.forEach(s => {
+            s.classList.remove('exit-left');
+            s.style.transform = '';
+            s.style.opacity = '';
+            s.style.transition = '';
+            if (!s.classList.contains('active')) {
+                s.style.pointerEvents = '';
+            }
+        });
+    }
+
     function goToSlide(index) {
-        if (isAnimating || index === currentSlide || index < 0 || index >= slides.length) return;
-        isAnimating = true;
+        if (index === currentSlide || index < 0 || index >= slides.length) return;
+
+        // Cancel any pending animation cleanup
+        if (animationTimer) {
+            clearTimeout(animationTimer);
+            animationTimer = null;
+        }
+
+        // Clean up any leftover inline styles from previous animations
+        cleanupAllSlides();
 
         const direction = index > currentSlide ? 1 : -1;
         const current = slides[currentSlide];
@@ -2180,7 +2201,6 @@
 
         // Exit current
         current.classList.remove('active');
-        if (direction > 0) current.classList.add('exit-left');
         current.style.transform = direction > 0 ? 'translateX(-40px)' : 'translateX(40px)';
         current.style.opacity = '0';
 
@@ -2193,7 +2213,7 @@
         next.offsetHeight;
 
         // Animate next slide in
-        next.style.transition = '';
+        next.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
         next.classList.add('active');
         next.style.transform = 'translateX(0)';
         next.style.opacity = '1';
@@ -2201,14 +2221,10 @@
         currentSlide = index;
         updateUI();
 
-        setTimeout(() => {
-            current.classList.remove('exit-left');
-            current.style.transform = '';
-            current.style.opacity = '';
-            next.style.transform = '';
-            next.style.opacity = '';
-            isAnimating = false;
-        }, 500);
+        animationTimer = setTimeout(() => {
+            cleanupAllSlides();
+            animationTimer = null;
+        }, 300);
     }
 
     function nextSlide() {
