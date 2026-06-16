@@ -786,20 +786,91 @@
         }
 
         /* ═══ Responsive ═══ */
+        /* ═══ Tablet ═══ */
+        @media (max-width: 1024px) {
+            .slide { padding: 50px 50px; }
+            .slide-inner { max-width: 100%; }
+        }
+
+        /* ═══ Mobile ═══ */
         @media (max-width: 768px) {
-            .slide { padding: 40px 30px; }
-            h1 { font-size: 2.2rem; }
-            .title-slide h1 { font-size: 2.8rem; }
-            h2 { font-size: 1.8rem; }
-            .cards-grid { grid-template-columns: 1fr; }
+            .slide {
+                padding: 30px 20px 60px;
+                overflow-y: auto;
+                justify-content: flex-start;
+                align-items: stretch;
+                -webkit-overflow-scrolling: touch;
+            }
+            .slide-inner {
+                margin-top: 20px;
+                padding-bottom: 40px;
+            }
+            h1 { font-size: 1.8rem; }
+            .title-slide h1 { font-size: 2.2rem; }
+            h2 { font-size: 1.4rem; }
+            .subtitle { font-size: 0.85rem; }
+            .slide-tag { font-size: 0.65rem; padding: 4px 10px; }
+            .cards-grid { grid-template-columns: 1fr !important; gap: 10px; }
             .feature-grid { grid-template-columns: 1fr; }
             .project-options { grid-template-columns: 1fr; }
-            .two-col { grid-template-columns: 1fr; }
+            .two-col { grid-template-columns: 1fr; gap: 12px; }
+            .col { padding: 16px; }
             .workflow-row { flex-direction: column; }
             .workflow-arrow { transform: rotate(90deg); }
             .nav-arrow { display: none; }
             .vs-container { grid-template-columns: 1fr; }
+            .vs-badge { font-size: 1.5rem; }
             .compression-flow { flex-direction: column; }
+            .nav-dots { display: none; }
+            .slide-counter { bottom: 12px; right: 16px; font-size: 11px; }
+
+            /* Scrollable tables on mobile */
+            .format-table,
+            .shortcut-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                white-space: nowrap;
+                font-size: 0.75rem;
+            }
+
+            .highlight-box { padding: 14px 16px; }
+            .highlight-box h4 { font-size: 0.85rem; }
+            .highlight-box p { font-size: 0.8rem; }
+
+            .card { padding: 16px; }
+            .card-icon { font-size: 1.8rem; }
+            .card h4 { font-size: 0.9rem; }
+            .card p { font-size: 0.78rem; }
+
+            .steps-list { gap: 12px; }
+            .step-number { width: 28px; height: 28px; font-size: 0.8rem; }
+            .step-content h4 { font-size: 0.85rem; }
+            .step-content p { font-size: 0.78rem; }
+
+            .checklist-item { padding: 10px 14px; font-size: 0.85rem; }
+            .big-number { font-size: 3.5rem; }
+
+            .timeline-time { font-size: 0.75rem; min-width: 110px; }
+            .timeline-content h4 { font-size: 0.85rem; }
+            .timeline-content p { font-size: 0.75rem; }
+
+            .resource-links { gap: 8px; }
+            .resource-link { padding: 12px 16px; font-size: 0.8rem; }
+
+            .decorative-line { width: 60px; }
+            .date-badge { font-size: 0.75rem; padding: 6px 14px; }
+        }
+
+        /* ═══ Small Phones ═══ */
+        @media (max-width: 400px) {
+            .slide { padding: 20px 14px 50px; }
+            h1 { font-size: 1.5rem; }
+            .title-slide h1 { font-size: 1.8rem; }
+            h2 { font-size: 1.2rem; }
+            .subtitle { font-size: 0.78rem; }
+            .compression-step { min-width: 80px; padding: 10px 12px; }
+            .compression-step .cs-size { font-size: 1.1rem; }
         }
 
         /* ═══ Print ═══ */
