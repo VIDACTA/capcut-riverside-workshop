@@ -805,6 +805,9 @@
                 justify-content: flex-start;
                 align-items: center;
                 -webkit-overflow-scrolling: touch;
+                /* No slide animation on mobile — pure fade to prevent black gaps */
+                transform: none !important;
+                transition: opacity 0.2s ease !important;
             }
             .slide-inner {
                 margin-top: 20px;
