@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop: Videoproduktion mit CapCut & Riverside</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255,255,255,0.04);
+            --bg-card-hover: rgba(255,255,255,0.08);
+            --accent-1: #6366f1;
+            --accent-2: #8b5cf6;
+            --accent-3: #a78bfa;
+            --accent-capcut: #00d4aa;
+            --accent-riverside: #4f8cff;
+            --text-primary: #f1f1f6;
+            --text-secondary: rgba(255,255,255,0.6);
+            --text-muted: rgba(255,255,255,0.35);
+            --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+            --gradient-capcut: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+            --gradient-riverside: linear-gradient(135deg, #4f8cff 0%, #6366f1 100%);
+            --gradient-bg: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                           radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.06) 0%, transparent 50%),
+                           radial-gradient(ellipse at 50% 80%, rgba(79,140,255,0.05) 0%, transparent 50%);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ═══ Progress Bar ═══ */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+
+        /* ═══ Slide Counter ═══ */
+        .slide-counter {
+            position: fixed;
+            bottom: 24px;
+            right: 32px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            z-index: 100;
+            letter-spacing: 1px;
+        }
+
+        /* ═══ Navigation Dots ═══ */
+        .nav-dots {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 100;
+        }
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-dot.active {
+            background: var(--accent-2);
+            box-shadow: 0 0 10px rgba(139,92,246,0.5);
+            transform: scale(1.2);
+        }
+        .nav-dot:hover {
+            background: rgba(255,255,255,0.35);
+        }
+
+        /* ═══ Navigation Arrows ═══ */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+        }
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.12);
+            color: var(--text-primary);
+        }
+        .nav-arrow.prev { left: 20px; }
+        .nav-arrow.next { right: 20px; }
+
+        /* ═══ Slides Container ═══ */
+        .slides-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 80px;
+            opacity: 0;
+            transform: translateX(40px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            background: var(--gradient-bg);
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+        }
+
+        .slide.exit-left {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+
+        /* ═══ Slide Content Styles ═══ */
+        .slide-inner {
+            max-width: 1000px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .slide-inner.left-align {
+            text-align: left;
+        }
+
+        .slide-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 24px;
+            background: rgba(99,102,241,0.12);
+            color: var(--accent-3);
+            border: 1px solid rgba(99,102,241,0.15);
+        }
+
+        .slide-tag.capcut {
+            background: rgba(0,212,170,0.1);
+            color: var(--accent-capcut);
+            border-color: rgba(0,212,170,0.15);
+        }
+
+        .slide-tag.riverside {
+            background: rgba(79,140,255,0.1);
+            color: var(--accent-riverside);
+            border-color: rgba(79,140,255,0.15);
+        }
+
+        .slide-tag.uebung {
+            background: rgba(251,191,36,0.1);
+            color: #fbbf24;
+            border-color: rgba(251,191,36,0.15);
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+        }
+
+        h1 .gradient-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 .capcut-text {
+            background: var(--gradient-capcut);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 .riverside-text {
+            background: var(--gradient-riverside);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h2 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ═══ Cards Grid ═══ */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }
+
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ═══ Timeline / Schedule ═══ */
+        .timeline {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-time {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-3);
+            min-width: 120px;
+            white-space: nowrap;
+        }
+
+        .timeline-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* ═══ Steps List ═══ */
+        .steps-list {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 12px 0;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .step-number.capcut-num {
+            background: var(--gradient-capcut);
+            color: #0a0a0f;
+        }
+
+        .step-number.riverside-num {
+            background: var(--gradient-riverside);
+        }
+
+        .step-number.grundlagen-num {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #0a0a0f;
+        }
+
+        .slide-tag.grundlagen {
+            background: rgba(245,158,11,0.1);
+            color: #f59e0b;
+            border-color: rgba(245,158,11,0.15);
+        }
+
+        .slide-tag.recht {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border-color: rgba(239,68,68,0.15);
+        }
+
+        .format-table {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .format-table th {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .format-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        .format-table td:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .format-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+        .badge-green { background: rgba(0,212,170,0.12); color: var(--accent-capcut); }
+        .badge-blue { background: rgba(79,140,255,0.12); color: var(--accent-riverside); }
+        .badge-purple { background: rgba(139,92,246,0.12); color: var(--accent-2); }
+        .badge-orange { background: rgba(245,158,11,0.12); color: #f59e0b; }
+        .badge-red { background: rgba(239,68,68,0.12); color: #f87171; }
+
+        .vs-container { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin-top: 24px; }
+        .vs-box { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px 24px; text-align: center; }
+        .vs-box h4 { margin-bottom: 12px; font-size: 1.1rem; }
+        .vs-box .vs-icon { font-size: 3rem; margin-bottom: 12px; }
+        .vs-box ul { list-style: none; padding: 0; text-align: left; }
+        .vs-box ul li { padding: 5px 0; font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: flex-start; gap: 6px; }
+        .vs-badge { font-size: 2.5rem; font-weight: 800; color: var(--accent-3); }
+
+        .compression-flow { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        .compression-step { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px 20px; text-align: center; min-width: 120px; }
+        .compression-step .cs-size { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+        .compression-step .cs-label { font-size: 0.75rem; color: var(--text-muted); }
+        .compression-arrow { font-size: 1.2rem; color: #f87171; }
+
+        .step-content h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* ═══ Feature Grid ═══ */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .feature-item .icon {
+            font-size: 1.3rem;
+        }
+
+        /* ═══ Shortcut Table ═══ */
+        .shortcut-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .shortcut-table th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .shortcut-table td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.9rem;
+        }
+
+        .shortcut-table tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .kbd {
+            display: inline-block;
+            padding: 3px 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            font-family: 'Inter', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent-3);
+        }
+
+        /* ═══ Checklist ═══ */
+        .checklist {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            font-size: 0.95rem;
+        }
+
+        .check-icon {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border-radius: 6px;
+            background: rgba(0,212,170,0.1);
+            border: 1px solid rgba(0,212,170,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-capcut);
+            font-size: 0.7rem;
+        }
+
+        /* ═══ Big Number ═══ */
+        .big-number {
+            font-size: 6rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        /* ═══ Workflow Arrow ═══ */
+        .workflow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .workflow-step {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 20px 28px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .workflow-step .wf-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .workflow-step .wf-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .workflow-arrow {
+            font-size: 1.5rem;
+            color: var(--accent-3);
+        }
+
+        /* ═══ Highlight Box ═══ */
+        .highlight-box {
+            background: rgba(99,102,241,0.08);
+            border: 1px solid rgba(99,102,241,0.15);
+            border-radius: 14px;
+            padding: 24px 28px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .highlight-box.capcut-box {
+            background: rgba(0,212,170,0.06);
+            border-color: rgba(0,212,170,0.12);
+        }
+
+        .highlight-box.riverside-box {
+            background: rgba(79,140,255,0.06);
+            border-color: rgba(79,140,255,0.12);
+        }
+
+        .highlight-box.warning-box {
+            background: rgba(251,191,36,0.06);
+            border-color: rgba(251,191,36,0.12);
+        }
+
+        .highlight-box h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .highlight-box p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ═══ Project Options ═══ */
+        .project-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .project-option {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .project-option:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99,102,241,0.3);
+            box-shadow: 0 12px 40px rgba(99,102,241,0.08);
+        }
+
+        .project-option .po-icon {
+            font-size: 2.5rem;
+            margin-bottom: 14px;
+        }
+
+        .project-option h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .project-option p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* ═══ Resources Links ═══ */
+        .resource-links {
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .resource-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+        }
+
+        .resource-link:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(255,255,255,0.12);
+        }
+
+        .resource-link .rl-icon {
+            font-size: 1.4rem;
+        }
+
+        .resource-link .rl-text {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .resource-link .rl-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: auto;
+        }
+
+        /* ═══ Title Slide Specific ═══ */
+        .title-slide .date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .title-slide h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .title-slide .subtitle {
+            font-size: 1.3rem;
+            max-width: 600px;
+        }
+
+        .decorative-line {
+            width: 60px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+            margin: 24px auto;
+        }
+
+        /* ═══ Two Column ═══ */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .two-col .col {
+            padding: 24px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+        }
+
+        .two-col .col h4 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .two-col .col ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .two-col .col ul li {
+            padding: 6px 0;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .two-col .col ul li::before {
+            content: "→";
+            color: var(--accent-3);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* ═══ End slide ═══ */
+        .end-slide h1 {
+            font-size: 5rem;
+        }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 768px) {
+            .slide { padding: 40px 30px; }
+            h1 { font-size: 2.2rem; }
+            .title-slide h1 { font-size: 2.8rem; }
+            h2 { font-size: 1.8rem; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .project-options { grid-template-columns: 1fr; }
+            .two-col { grid-template-columns: 1fr; }
+            .workflow-row { flex-direction: column; }
+            .workflow-arrow { transform: rotate(90deg); }
+            .nav-arrow { display: none; }
+            .vs-container { grid-template-columns: 1fr; }
+            .compression-flow { flex-direction: column; }
+        }
+
+        /* ═══ Print ═══ */
+        @media print {
+            .slide { position: relative; height: auto; min-height: 100vh; opacity: 1; transform: none; pointer-events: all; page-break-after: always; }
+            .nav-arrow, .nav-dots, .progress-bar, .slide-counter { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="slide-counter" id="slideCounter"></div>
+<div class="nav-dots" id="navDots"></div>
+
+<button class="nav-arrow prev" onclick="prevSlide()">←</button>
+<button class="nav-arrow next" onclick="nextSlide()">→</button>
+
+<div class="slides-container" id="slidesContainer">
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 1: Title -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide title-slide active">
+        <div class="slide-inner">
+            <div class="date-badge">📅 17. Juni 2026 · 09:00 – 16:00 Uhr</div>
+            <h1>Videoproduktion mit<br><span class="capcut-text">CapCut</span> & <span class="riverside-text">Riverside</span></h1>
+            <div class="decorative-line"></div>
+            <p class="subtitle">Von der Aufnahme zum fertigen Video – ein Ganztags-Workshop für Einsteiger</p>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 2: Agenda -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag">Tagesplan</span>
+            <h2>Was erwartet euch heute?</h2>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <span class="timeline-time">☕ 09:00 – 09:30</span>
+                    <div class="timeline-content">
+                        <h4>Begrüßung & Einführung</h4>
+                        <p>Vorstellungsrunde, Warum Video?, Workflow</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">📐 09:30 – 10:30</span>
+                    <div class="timeline-content">
+                        <h4>Digitale Grundlagen</h4>
+                        <p>Explorer & SharePoint, Dateiformate, Pixel vs. Vektor, Komprimierung, Lizenzen</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">☕ 10:30 – 10:45</span>
+                    <div class="timeline-content">
+                        <h4>Kaffeepause</h4>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">🎙️ 10:45 – 11:45</span>
+                    <div class="timeline-content">
+                        <h4>Riverside: Transkription & Magic Tools</h4>
+                        <p>Video hochladen, Transkripte, Magic Clips & Episodes + Übung</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">🍽️ 11:45 – 12:30</span>
+                    <div class="timeline-content">
+                        <h4>Mittagspause</h4>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">🖥️ 12:30 – 14:30</span>
+                    <div class="timeline-content">
+                        <h4>CapCut (Grundlagen + Fortgeschritten)</h4>
+                        <p>Interface, Timeline, Texte, Effekte, Musik, KI-Features + Übungen</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">🎬 14:30 – 15:30</span>
+                    <div class="timeline-content">
+                        <h4>Abschlussprojekt</h4>
+                        <p>Jeder erstellt ein eigenes Video mit Riverside-Material in CapCut</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <span class="timeline-time">🏆 15:30 – 16:00</span>
+                    <div class="timeline-content">
+                        <h4>Präsentation & Wrap-Up</h4>
+                        <p>Screening, Feedback, Ressourcen, Q&A</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 3: Why Video? -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag">Einführung</span>
+            <h2>Warum Video-Content?</h2>
+            <p class="subtitle">Video ist das dominierende Format im digitalen Marketing</p>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">📈</div>
+                    <h4>82% des Internet-Traffics</h4>
+                    <p>Video macht den Großteil des gesamten Internet-Traffics aus</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⏱️</div>
+                    <h4>2× längere Verweildauer</h4>
+                    <p>Besucher bleiben doppelt so lang auf Seiten mit Video</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <h4>95% Merkfähigkeit</h4>
+                    <p>Videos werden 95% besser erinnert als Text</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🚀</div>
+                    <h4>Social Media Reichweite</h4>
+                    <p>Reels & Shorts bekommen die höchste organische Reichweite</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 4: Workflow -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag">Workflow</span>
+            <h2>Unser Workflow heute</h2>
+            <p class="subtitle">Vom Rohmaterial zum fertigen Video in 4 Schritten</p>
+            <div class="workflow-row">
+                <div class="workflow-step">
+                    <div class="wf-icon">📹</div>
+                    <div class="wf-label">Aufnahme</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="border-color: rgba(79,140,255,0.25);">
+                    <div class="wf-icon">🎙️</div>
+                    <div class="wf-label">Riverside</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="border-color: rgba(0,212,170,0.25);">
+                    <div class="wf-icon">✂️</div>
+                    <div class="wf-label">CapCut</div>
+                </div>
+                <div class="workflow-arrow">→</div>
+                <div class="workflow-step" style="border-color: rgba(99,102,241,0.25);">
+                    <div class="wf-icon">🎬</div>
+                    <div class="wf-label">Fertiges Video</div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 32px;">
+                <h4>💡 Heute im Fokus</h4>
+                <p><strong>CapCut</strong> – Unser Hauptwerkzeug für Videoschnitt, Texte, Effekte und Export.<br>
+                <strong>Riverside</strong> – Für Transkription, Magic Clips und intelligente Text-Extraktion.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 5: SharePoint & Explorer -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>SharePoint & Windows Explorer</h2>
+            <p class="subtitle">Dateien direkt im Explorer bearbeiten – ohne Umweg über den Browser</p>
+            <div class="two-col">
+                <div class="col">
+                    <h4>📂 SharePoint im Explorer einbinden</h4>
+                    <ul>
+                        <li>SharePoint im Browser öffnen</li>
+                        <li>Oben auf <strong>„Synchronisieren"</strong> klicken</li>
+                        <li>OneDrive öffnet sich und synchronisiert</li>
+                        <li>Ordner erscheint im Explorer unter <strong>Vidacta Gruppe GmbH</strong></li>
+                        <li>Dateien bearbeiten wie gewohnt – alles synchronisiert automatisch!</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>⚡ Vorteile</h4>
+                    <ul>
+                        <li>Drag & Drop in CapCut direkt vom Explorer</li>
+                        <li>Kein manuelles Hoch-/Runterladen</li>
+                        <li>Offline-Zugriff auf Dateien möglich</li>
+                        <li>Versionsverlauf über SharePoint</li>
+                        <li>Team arbeitet auf denselben Dateien</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box warning-box" style="margin-top: 20px;">
+                <h4>⚠️ Wichtig</h4>
+                <p>Große Video-Rohdaten <strong>nicht</strong> in SharePoint speichern – die Synchronisierung dauert ewig und verbraucht Speicher. SharePoint ist ideal für fertige Videos, Grafiken und Projektdateien.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 6: Dateiendungen anzeigen -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>Dateiendungen anzeigen</h2>
+            <p class="subtitle">Warum ihr immer sehen solltet, welches Format eine Datei hat</p>
+            <div class="steps-list">
+                <div class="step-item">
+                    <div class="step-number grundlagen-num">1</div>
+                    <div class="step-content">
+                        <h4>Explorer öffnen</h4>
+                        <p>Einen beliebigen Ordner im Windows Explorer öffnen</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number grundlagen-num">2</div>
+                    <div class="step-content">
+                        <h4>Menü „Ansicht" → „Anzeigen"</h4>
+                        <p>In der oberen Menüleiste auf <strong>Ansicht</strong> klicken, dann auf <strong>Anzeigen</strong></p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number grundlagen-num">3</div>
+                    <div class="step-content">
+                        <h4>„Dateinamenerweiterungen" aktivieren ✅</h4>
+                        <p>Häkchen setzen – ab jetzt seht ihr <code>.mp4</code>, <code>.png</code>, <code>.psd</code> usw.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>💡 Warum ist das wichtig?</h4>
+                <p>Ohne Dateiendungen seht ihr nicht, ob ein Bild ein <strong>.png</strong> (mit Transparenz) oder ein <strong>.jpg</strong> (ohne) ist. Oder ob ein Video <strong>.mp4</strong> (komprimiert) oder <strong>.mov</strong> (Rohdaten) ist. Beim Videoschnitt ist das entscheidend!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 7: Ordnerstruktur & Dateibenennung -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>📁 Ordnerstruktur & Dateibenennung</h2>
+            <p class="subtitle">Ordnung spart euch Stunden an Suchen!</p>
+            <div class="two-col">
+                <div class="col" style="border-color: rgba(239,68,68,0.2);">
+                    <h4>❌ So bitte nicht</h4>
+                    <ul>
+                        <li><code>video_final.mp4</code></li>
+                        <li><code>video_final_v2.mp4</code></li>
+                        <li><code>video_FINAL_wirklich.mp4</code></li>
+                        <li><code>Neuer Ordner (3)/Kopie</code></li>
+                        <li><code>IMG_20260617.MOV</code></li>
+                    </ul>
+                </div>
+                <div class="col" style="border-color: rgba(0,212,170,0.2);">
+                    <h4>✅ So geht's</h4>
+                    <ul>
+                        <li><code>2026-06-17_Vidacta_Reel_v1.mp4</code></li>
+                        <li><code>2026-06-17_Vidacta_Reel_v2.mp4</code></li>
+                        <li><code>2026-06-17_Interview_Rohdaten.mov</code></li>
+                        <li>Ordner: <code>01_Rohdaten/</code> <code>02_Projekt/</code> <code>03_Export/</code></li>
+                        <li>Schema: <code>Datum_Projekt_Typ_Version</code></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box capcut-box" style="margin-top: 20px;">
+                <h4>📂 Empfohlene Projektstruktur</h4>
+                <p><code>Projektname/</code> → <code>01_Rohdaten/</code> | <code>02_Audio/</code> | <code>03_Grafiken/</code> | <code>04_Projekt/</code> | <code>05_Export/</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 8: Pixel vs. Vektor -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>Pixelgrafik vs. Vektorgrafik</h2>
+            <p class="subtitle">Zwei grundlegend verschiedene Arten, Bilder darzustellen</p>
+            <div class="vs-container">
+                <div class="vs-box">
+                    <div class="vs-icon">🟦</div>
+                    <h4>Pixelgrafik (Raster)</h4>
+                    <ul>
+                        <li>🔲 Besteht aus einzelnen <strong>Bildpunkten</strong> (Pixeln)</li>
+                        <li>📐 Hat eine feste Auflösung (z.B. 1920×1080)</li>
+                        <li>🔍 Wird <strong>unscharf</strong> beim Vergrößern</li>
+                        <li>📸 Für <strong>Fotos, Screenshots, Videos</strong></li>
+                        <li>📄 Formate: JPG, PNG, TIFF, PSD, WebP</li>
+                    </ul>
+                </div>
+                <div class="vs-badge">vs</div>
+                <div class="vs-box">
+                    <div class="vs-icon">📐</div>
+                    <h4>Vektorgrafik</h4>
+                    <ul>
+                        <li>📐 Besteht aus <strong>mathematischen Formen</strong> (Pfade, Kurven)</li>
+                        <li>♾️ <strong>Unendlich skalierbar</strong> ohne Qualitätsverlust</li>
+                        <li>🔍 Bleibt immer gestochen scharf</li>
+                        <li>🎨 Für <strong>Logos, Icons, Illustrationen</strong></li>
+                        <li>📄 Formate: SVG, AI, EPS, PDF</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>💡 Faustregel</h4>
+                <p><strong>Fotos & Videos</strong> = immer Pixel &nbsp;|&nbsp; <strong>Logos & Grafiken</strong> = wenn möglich Vektor &nbsp;|&nbsp; <strong>Im Zweifel:</strong> Nach der Vektordatei fragen!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 9: Dateiformate Bilder -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Dateiformate</span>
+            <h2>🖼️ Bildformate im Überblick</h2>
+            <table class="format-table">
+                <thead>
+                    <tr><th>Format</th><th>Typ</th><th>Transparenz</th><th>Einsatz</th><th>Software</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>.JPG / .JPEG</strong></td><td><span class="badge badge-green">Pixel</span></td><td>❌</td><td>Fotos, Web</td><td>Alle</td></tr>
+                    <tr><td><strong>.PNG</strong></td><td><span class="badge badge-green">Pixel</span></td><td>✅</td><td>Grafiken, Screenshots, Logos</td><td>Alle</td></tr>
+                    <tr><td><strong>.WebP</strong></td><td><span class="badge badge-green">Pixel</span></td><td>✅</td><td>Web (kleiner als JPG/PNG)</td><td>Browser, Photoshop</td></tr>
+                    <tr><td><strong>.TIFF</strong></td><td><span class="badge badge-green">Pixel</span></td><td>✅</td><td>Druck, Archivierung (verlustfrei)</td><td>Photoshop, Lightroom</td></tr>
+                    <tr><td><strong>.PSD</strong></td><td><span class="badge badge-purple">Adobe</span></td><td>✅</td><td>Photoshop-Projekt (Ebenen editierbar)</td><td>Photoshop</td></tr>
+                    <tr><td><strong>.AI</strong></td><td><span class="badge badge-blue">Vektor</span></td><td>✅</td><td>Illustrator-Projekt (Vektoren editierbar)</td><td>Illustrator</td></tr>
+                    <tr><td><strong>.SVG</strong></td><td><span class="badge badge-blue">Vektor</span></td><td>✅</td><td>Web-Grafiken, Icons, Logos</td><td>Browser, Illustrator</td></tr>
+                    <tr><td><strong>.EPS / .PDF</strong></td><td><span class="badge badge-blue">Vektor</span></td><td>✅</td><td>Druck, Austauschformat</td><td>Illustrator, InDesign</td></tr>
+                    <tr><td><strong>.RAW / .CR3 / .ARW</strong></td><td><span class="badge badge-orange">Roh</span></td><td>❌</td><td>Kamera-Rohdaten (max. Qualität)</td><td>Lightroom, Camera Raw</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 10: Dateiformate Audio -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Dateiformate</span>
+            <h2>🔊 Audioformate im Überblick</h2>
+            <table class="format-table">
+                <thead>
+                    <tr><th>Format</th><th>Qualität</th><th>Größe</th><th>Einsatz</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>.WAV</strong></td><td><span class="badge badge-green">Verlustfrei</span></td><td>Sehr groß (~50 MB/Min.)</td><td>Studioaufnahmen, Nachbearbeitung</td></tr>
+                    <tr><td><strong>.AIFF</strong></td><td><span class="badge badge-green">Verlustfrei</span></td><td>Sehr groß</td><td>Apple-Äquivalent zu WAV</td></tr>
+                    <tr><td><strong>.FLAC</strong></td><td><span class="badge badge-green">Verlustfrei</span></td><td>Groß (komprimiert)</td><td>Archivierung, Hi-Fi Musik</td></tr>
+                    <tr><td><strong>.MP3</strong></td><td><span class="badge badge-orange">Komprimiert</span></td><td>Klein (~1 MB/Min.)</td><td>Musik, Podcasts, Web (universell)</td></tr>
+                    <tr><td><strong>.AAC / .M4A</strong></td><td><span class="badge badge-orange">Komprimiert</span></td><td>Klein</td><td>Besser als MP3, Apple/YouTube Standard</td></tr>
+                    <tr><td><strong>.OGG</strong></td><td><span class="badge badge-orange">Komprimiert</span></td><td>Klein</td><td>Open Source Alternative zu MP3</td></tr>
+                </tbody>
+            </table>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>💡 Für Videoproduktion</h4>
+                <p><strong>Aufnahme/Bearbeitung:</strong> WAV (beste Qualität) &nbsp;|&nbsp; <strong>Export/Teilen:</strong> MP3 oder AAC &nbsp;|&nbsp; <strong>In CapCut:</strong> alle Formate werden unterstützt</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 11: Dateiformate Video -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Dateiformate</span>
+            <h2>🎬 Videoformate im Überblick</h2>
+            <table class="format-table">
+                <thead>
+                    <tr><th>Format</th><th>Codec</th><th>Qualität</th><th>Einsatz</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>.MP4</strong></td><td>H.264 / H.265</td><td><span class="badge badge-green">Gut</span></td><td>Universalformat – Web, Social Media, überall</td></tr>
+                    <tr><td><strong>.MOV</strong></td><td>ProRes / H.264</td><td><span class="badge badge-green">Sehr gut</span></td><td>Apple/Final Cut, hochwertige Aufnahmen</td></tr>
+                    <tr><td><strong>.MKV</strong></td><td>Verschiedene</td><td><span class="badge badge-green">Gut</span></td><td>Flexibler Container, mehrere Tonspuren</td></tr>
+                    <tr><td><strong>.AVI</strong></td><td>Verschiedene</td><td><span class="badge badge-orange">Veraltet</span></td><td>Legacy-Format, kaum noch verwendet</td></tr>
+                    <tr><td><strong>.PRPROJ</strong></td><td><span class="badge badge-purple">Adobe</span></td><td>—</td><td>Premiere Pro Projektdatei (nicht abspielbar!)</td></tr>
+                    <tr><td><strong>.AEP</strong></td><td><span class="badge badge-purple">Adobe</span></td><td>—</td><td>After Effects Projektdatei (nicht abspielbar!)</td></tr>
+                </tbody>
+            </table>
+            <div class="highlight-box capcut-box" style="margin-top: 16px;">
+                <h4>⚡ Container vs. Codec</h4>
+                <p><strong>Container</strong> (.mp4, .mov) = die „Verpackung" &nbsp;|&nbsp; <strong>Codec</strong> (H.264, ProRes) = die „Komprimierungsmethode" darin.<br>Gleicher Container kann verschiedene Codecs enthalten! Ein <code>.mov</code> kann H.264 (klein) oder ProRes (riesig) sein.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 12: Auflösung, DPI & Bitrate -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>Auflösung, DPI & Bitrate</h2>
+            <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card">
+                    <div class="card-icon">📐</div>
+                    <h4>Auflösung</h4>
+                    <p>Anzahl der Pixel: Breite × Höhe</p>
+                    <p style="margin-top:8px; font-size:0.8rem; color: var(--text-muted);"><strong>720p</strong> = 1280×720 (HD)<br><strong>1080p</strong> = 1920×1080 (Full HD)<br><strong>4K</strong> = 3840×2160 (Ultra HD)</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🖨️</div>
+                    <h4>DPI (Dots Per Inch)</h4>
+                    <p>Pixel pro Zoll – relevant für <strong>Druck</strong></p>
+                    <p style="margin-top:8px; font-size:0.8rem; color: var(--text-muted);"><strong>72 DPI</strong> = Web/Bildschirm<br><strong>150 DPI</strong> = einfacher Druck<br><strong>300 DPI</strong> = hochwertiger Druck</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📊</div>
+                    <h4>Bitrate</h4>
+                    <p>Datenmenge pro Sekunde – bestimmt die <strong>Videoqualität</strong></p>
+                    <p style="margin-top:8px; font-size:0.8rem; color: var(--text-muted);"><strong>5 Mbps</strong> = Social Media<br><strong>10-20 Mbps</strong> = YouTube 1080p<br><strong>50+ Mbps</strong> = Profi/Rohmaterial</p>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h4>💡 Merkhilfe</h4>
+                <p><strong>Auflösung</strong> = wie viele Pixel &nbsp;|&nbsp; <strong>DPI</strong> = wie dicht die Pixel gedruckt werden &nbsp;|&nbsp; <strong>Bitrate</strong> = wie viel Detail pro Sekunde Video. Mehr = besser, aber größere Dateien!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 13: Video-Komprimierung in Chats -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag grundlagen">Digitale Grundlagen</span>
+            <h2>⚠️ Videos aus Chats = Qualitätsverlust</h2>
+            <p class="subtitle">Warum WhatsApp-, Teams- und Telegram-Videos NICHT für die Produktion taugen</p>
+            <div class="compression-flow">
+                <div class="compression-step">
+                    <div class="cs-size" style="color: var(--accent-capcut);">120 MB</div>
+                    <div class="cs-label">Original-Video<br>1080p, hohe Bitrate</div>
+                </div>
+                <div class="compression-arrow">→ WhatsApp →</div>
+                <div class="compression-step">
+                    <div class="cs-size" style="color: #f59e0b;">8 MB</div>
+                    <div class="cs-label">Empfangen<br>720p, niedrige Bitrate</div>
+                </div>
+                <div class="compression-arrow">→ Weiterleiten →</div>
+                <div class="compression-step">
+                    <div class="cs-size" style="color: #f87171;">3 MB</div>
+                    <div class="cs-label">Nochmal komprimiert<br>Pixelig, Artefakte</div>
+                </div>
+            </div>
+            <div class="two-col" style="margin-top: 24px;">
+                <div class="col" style="border-color: rgba(239,68,68,0.2);">
+                    <h4>❌ Was passiert in Chats?</h4>
+                    <ul>
+                        <li>Auflösung wird <strong>heruntergerechnet</strong></li>
+                        <li>Bitrate wird <strong>massiv reduziert</strong> (Matsch-Effekt)</li>
+                        <li>Audio wird auf <strong>Mono</strong> komprimiert</li>
+                        <li>Jedes Weiterleiten <strong>komprimiert erneut</strong></li>
+                        <li>Metadaten (Farbraum, HDR) gehen verloren</li>
+                    </ul>
+                </div>
+                <div class="col" style="border-color: rgba(0,212,170,0.2);">
+                    <h4>✅ So teilt ihr Videos richtig</h4>
+                    <ul>
+                        <li><strong>SharePoint / OneDrive</strong> – Link teilen</li>
+                        <li><strong>Google Drive / Dropbox</strong> – Link teilen</li>
+                        <li><strong>WeTransfer</strong> – für einmaligen Transfer</li>
+                        <li><strong>USB-Stick</strong> – für große Dateien vor Ort</li>
+                        <li><strong>WhatsApp „als Dokument"</strong> – sendet unkomprimiert!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 14: Urheberrecht & Lizenzen -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag recht">Recht & Lizenzen</span>
+            <h2>⚖️ Urheberrecht & Lizenzen</h2>
+            <p class="subtitle">Wir sind ein Unternehmen – <strong>alles</strong> was wir produzieren ist kommerzielle Nutzung</p>
+            <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card" style="border-color: rgba(239,68,68,0.15);">
+                    <div class="card-icon">🚫</div>
+                    <h4>VERBOTEN</h4>
+                    <p>Musik von Spotify / Apple Music rippen. Bilder von Google kopieren. Videos von YouTube/TikTok herunterladen. Fremde Clips schneiden.</p>
+                </div>
+                <div class="card" style="border-color: rgba(245,158,11,0.15);">
+                    <div class="card-icon">⚠️</div>
+                    <h4>VORSICHT</h4>
+                    <p>YouTube Audio Library = <strong>nur YouTube!</strong> CapCut-Bibliothek = <strong>nur CapCut-Export.</strong> Instagram-Musik = <strong>nur privat!</strong> CC BY-NC = nicht kommerziell.</p>
+                </div>
+                <div class="card" style="border-color: rgba(0,212,170,0.15);">
+                    <div class="card-icon">✅</div>
+                    <h4>SICHER</h4>
+                    <p><strong>Adobe Stock</strong> (haben wir!). KI-generierte Medien (eigene). Pixabay (CC0). Bezahlte Lizenzen (Artlist, Epidemic Sound).</p>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 16px;">
+                <h4>🤖 KI-generierte Medien (Bilder, Musik, Video)</h4>
+                <p>Selbst mit KI erzeugte Inhalte (z.B. Midjourney, DALL·E, Suno, Udio) dürft ihr <strong>kommerziell nutzen</strong> – solange ihr ein <strong>bezahltes Abo</strong> des jeweiligen Tools habt. Kostenlose Tiers haben oft eingeschränkte kommerzielle Rechte. Immer die Nutzungsbedingungen des jeweiligen KI-Tools prüfen!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 14b: Lizenzierte Quellen Übersicht -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag recht">Recht & Lizenzen</span>
+            <h2>📋 Unsere Quellen im Überblick</h2>
+            <p class="subtitle">Was dürfen wir wo verwenden? – Bild, Audio & Video</p>
+            <table class="format-table" style="margin-top: 12px;">
+                <thead>
+                    <tr><th>Quelle</th><th>Medientyp</th><th>Kommerziell?</th><th>Plattform</th><th>Kosten</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Adobe Stock</strong> ⭐</td><td><span class="badge badge-green">Bild</span> <span class="badge badge-blue">Video</span> <span class="badge badge-purple">Audio</span></td><td>✅ Ja, voll</td><td>Überall</td><td>Abo (haben wir)</td></tr>
+                    <tr><td><strong>KI-generiert</strong> 🤖</td><td><span class="badge badge-green">Bild</span> <span class="badge badge-blue">Video</span> <span class="badge badge-purple">Audio</span></td><td>✅ Ja (mit Bezahl-Abo)</td><td>Überall</td><td>Je nach Tool</td></tr>
+                    <tr><td><strong>Pixabay</strong></td><td><span class="badge badge-green">Bild</span> <span class="badge badge-blue">Video</span> <span class="badge badge-purple">Audio</span></td><td>✅ Ja (CC0)</td><td>Überall</td><td>Kostenlos</td></tr>
+                    <tr><td><strong>Pexels</strong></td><td><span class="badge badge-green">Bild</span> <span class="badge badge-blue">Video</span></td><td>⚠️ Lizenz prüfen</td><td>Überall</td><td>Kostenlos</td></tr>
+                    <tr><td><strong>Artlist / Epidemic Sound</strong></td><td><span class="badge badge-purple">Audio</span></td><td>✅ Ja, voll</td><td>Überall</td><td>~$15/Monat</td></tr>
+                    <tr><td><strong>YouTube Audio Library</strong></td><td><span class="badge badge-purple">Audio</span></td><td>⚠️ Nur YouTube</td><td>Nur YouTube</td><td>Kostenlos</td></tr>
+                    <tr><td><strong>CapCut-Bibliothek</strong></td><td><span class="badge badge-purple">Audio</span> <span class="badge badge-green">Bild</span></td><td>⚠️ Nur CapCut</td><td>Export aus CapCut</td><td>Kostenlos</td></tr>
+                    <tr><td><strong>Meta Sound Collection</strong></td><td><span class="badge badge-purple">Audio</span></td><td>⚠️ Nur Meta</td><td>Nur Instagram/Facebook</td><td>Kostenlos</td></tr>
+                    <tr><td><strong>Instagram Musik-Bibliothek</strong></td><td><span class="badge badge-purple">Audio</span></td><td>❌ Nur privat!</td><td>Nur private Accounts</td><td>GEMA-Falle!</td></tr>
+                    <tr><td><strong>Spotify / Apple Music</strong></td><td><span class="badge badge-purple">Audio</span></td><td>❌ Nein</td><td>—</td><td>Verboten!</td></tr>
+                    <tr><td><strong>Google Bildersuche</strong></td><td><span class="badge badge-green">Bild</span></td><td>❌ Nein</td><td>—</td><td>Verboten!</td></tr>
+                </tbody>
+            </table>
+            <div class="highlight-box" style="margin-top: 14px; border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.06);">
+                <h4>🇩🇪 Instagram-Musik & GEMA – Das Deutschland-Problem</h4>
+                <p>Die <strong>normale Instagram-Musikbibliothek</strong> (Chart-Hits, Trending Sounds) ist <strong>nur für private Accounts</strong> lizenziert. Sobald ein Account geschäftlich handelt – und das tun wir! – greift die GEMA-Lizenz <strong>nicht</strong>. Folge: Reels werden <strong>stummgeschaltet</strong>, oder es drohen <strong>Abmahnungen mit 4-5-stelligen Forderungen</strong>.<br><br>
+                <strong>Meta Sound Collection</strong> (⭐-Symbol in der App) ist davon ausgenommen – Meta klärt hier die GEMA-Rechte für kommerzielle Nutzung. <strong>Aber:</strong> Diese Lizenz gilt <strong>nur auf Instagram & Facebook</strong>. Dasselbe Video mit Meta-Sound-Musik auf LinkedIn, Website oder YouTube = <strong>nicht abgedeckt!</strong> Für Cross-Platform-Content daher immer Adobe Stock, Pixabay oder eigene KI-Musik verwenden.</p>
+            </div>
+            <div class="highlight-box warning-box" style="margin-top: 10px;">
+                <h4>📌 Goldene Regel für Vidacta</h4>
+                <p><strong>Erste Wahl:</strong> Adobe Stock (haben wir!) oder eigene KI-generierte Inhalte. <strong>Zweite Wahl:</strong> Pixabay (CC0). <strong>Instagram-Reels:</strong> Nur Meta Sound Collection (⭐) oder eigene lizenzierte Musik! <strong>Im Zweifel:</strong> ohne Musik veröffentlichen und nachfragen!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 14: Riverside Intro -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag riverside">Riverside</span>
+            <h2>Was ist <span class="riverside-text">Riverside</span>?</h2>
+            <p class="subtitle">Eine Plattform für hochwertige Video-/Audio-Aufnahmen – mit mächtigen KI-Tools</p>
+            <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card">
+                    <div class="card-icon">📝</div>
+                    <h4>Transkription</h4>
+                    <p>Automatische Verschriftlichung mit Sprechererkennung</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">✂️</div>
+                    <h4>Magic Clips</h4>
+                    <p>KI erstellt automatisch kurze Highlight-Clips</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📄</div>
+                    <h4>Magic Episodes</h4>
+                    <p>Langes Video intelligent in thematische Episoden aufteilen</p>
+                </div>
+            </div>
+            <div class="highlight-box riverside-box" style="margin-top: 24px;">
+                <h4>🎯 Unser Fokus heute</h4>
+                <p>Wir nutzen Riverside <strong>nicht</strong> für die Aufnahme, sondern für die KI-Features: Transkription, Magic Clips und Text-Extraktion.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 15: Riverside Transkription -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner left-align">
+            <span class="slide-tag riverside">Riverside</span>
+            <h2>Transkription</h2>
+            <p class="subtitle" style="margin-left:0;">Aus Video wird Text – automatisch und mit Sprechererkennung</p>
+            <div class="steps-list">
+                <div class="step-item">
+                    <div class="step-number riverside-num">1</div>
+                    <div class="step-content">
+                        <h4>Video/Audio hochladen</h4>
+                        <p>Dashboard → „Upload" → Datei auswählen</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number riverside-num">2</div>
+                    <div class="step-content">
+                        <h4>Verarbeitung abwarten</h4>
+                        <p>Riverside erstellt automatisch das Transkript (5-15 Min.)</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number riverside-num">3</div>
+                    <div class="step-content">
+                        <h4>Transkript bearbeiten</h4>
+                        <p>Fehler korrigieren, Zeitstempel prüfen, Sprecher zuordnen</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number riverside-num">4</div>
+                    <div class="step-content">
+                        <h4>Exportieren</h4>
+                        <p>Als TXT, SRT (Untertitel), VTT oder DOCX – SRT direkt in CapCut nutzbar!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 16px;">
+                <h4>💡 Use Cases – Texte aus Videos ziehen!</h4>
+                <p>🎧 <strong>Spotify-Beschreibungen</strong> (Episodentitel, Shownotes, Zusammenfassungen) &nbsp;|&nbsp; 📱 <strong>Instagram-Captions</strong> (Zitate, Hooks, CTAs) &nbsp;|&nbsp; 📝 Blog-Artikel &nbsp;|&nbsp; 📊 SEO-Content &nbsp;|&nbsp; 📄 Dokumentation</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 16: Magic Clips & Episodes -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag riverside">Riverside KI</span>
+            <h2>Magic Clips & Magic Episodes</h2>
+            <div class="two-col">
+                <div class="col" style="border-color: rgba(79,140,255,0.2);">
+                    <h4>✂️ Magic Clips</h4>
+                    <ul>
+                        <li>KI findet die besten Momente</li>
+                        <li>Erstellt automatisch kurze Highlight-Clips (30-90 Sek.)</li>
+                        <li>Vorschau ansehen und auswählen</li>
+                        <li>Start-/Endzeit feinjustieren</li>
+                        <li>Als MP4 exportieren → In CapCut weiterbearbeiten</li>
+                    </ul>
+                </div>
+                <div class="col" style="border-color: rgba(99,102,241,0.2);">
+                    <h4>📄 Magic Episodes</h4>
+                    <ul>
+                        <li>Erkennt automatisch Themenwechsel</li>
+                        <li>Teilt Video in thematische Segmente</li>
+                        <li>Jede Episode mit Titel + Zusammenfassung</li>
+                        <li>Einzeln exportierbar</li>
+                        <li>Ideal für: Podcast → YouTube-Videos</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box riverside-box" style="margin-top: 20px;">
+                <h4>📋 Textvorlagen für die Veröffentlichung</h4>
+                <p>Aus den Transkripten und Magic Clips könnt ihr direkt <strong>Textvorlagen</strong> erstellen:<br>
+                🎧 <strong>Spotify:</strong> Episodenbeschreibung, Kapitelmarken, Shownotes &nbsp;|&nbsp; 📱 <strong>Instagram:</strong> Caption-Texte, Zitate als Karussell, Hooks für Reels &nbsp;|&nbsp; 💼 <strong>LinkedIn:</strong> Thought-Leadership-Posts aus Interview-Highlights</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 17: Übung 3 -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag uebung">Übung 3</span>
+            <div class="big-number">🎙️</div>
+            <h2>Riverside ausprobieren!</h2>
+            <p class="subtitle">Gemeinsam die KI-Tools von Riverside testen</p>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Vorbereitetes Video in Riverside öffnen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Transkription ansehen und durchlesen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Magic Clips generieren lassen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Die besten Clips auswählen und exportieren</span>
+                </div>
+            </div>
+            <div class="highlight-box riverside-box" style="margin-top: 20px;">
+                <h4>⏰ Zeit: 15 Minuten</h4>
+                <p>Das Video ist bereits vorab hochgeladen und verarbeitet. Wir fokussieren uns auf die KI-Ergebnisse!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 15: CapCut Interface -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">CapCut Grundlagen</span>
+            <h2>Die <span class="capcut-text">CapCut</span> Oberfläche</h2>
+            <p class="subtitle">Die 4 wichtigsten Bereiche auf einen Blick</p>
+            <div class="cards-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="card">
+                    <div class="card-icon">📂</div>
+                    <h4>Medienbibliothek</h4>
+                    <p>Oben links – Hier importierst du alle Dateien (Videos, Bilder, Audio)</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">👁️</div>
+                    <h4>Vorschau-Fenster</h4>
+                    <p>Oben rechts – Hier siehst du dein Video in Echtzeit</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎬</div>
+                    <h4>Timeline</h4>
+                    <p>Unten – Das Herzstück! Hier schneidest und arrangierst du</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚙️</div>
+                    <h4>Eigenschaften-Panel</h4>
+                    <p>Rechts – Bearbeite hier Effekte, Text, Audio, Geschwindigkeit</p>
+                </div>
+            </div>
+            <div class="highlight-box capcut-box" style="margin-top: 20px;">
+                <h4>⚡ Erster Schritt: Seitenverhältnis einstellen!</h4>
+                <p><strong>16:9</strong> → YouTube/Web &nbsp;|&nbsp; <strong>9:16</strong> → Reels/TikTok/Shorts &nbsp;|&nbsp; <strong>1:1</strong> → Instagram Feed</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 6: Timeline Basics -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner left-align">
+            <span class="slide-tag capcut">CapCut Grundlagen</span>
+            <h2>Timeline-Basics</h2>
+            <p class="subtitle" style="margin-left:0;">Die wichtigsten Aktionen in der Timeline</p>
+            <div class="steps-list">
+                <div class="step-item">
+                    <div class="step-number capcut-num">1</div>
+                    <div class="step-content">
+                        <h4>Importieren</h4>
+                        <p>Medien per Drag & Drop oder <span class="kbd">Strg + I</span> importieren</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">2</div>
+                    <div class="step-content">
+                        <h4>In die Timeline ziehen</h4>
+                        <p>Clips aus der Medienbibliothek nach unten in die Timeline ziehen</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">3</div>
+                    <div class="step-content">
+                        <h4>Schneiden (Split)</h4>
+                        <p>Playhead positionieren → <span class="kbd">Strg + B</span> → Clip wird geteilt</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">4</div>
+                    <div class="step-content">
+                        <h4>Trimmen</h4>
+                        <p>An den Rändern eines Clips ziehen, um Anfang/Ende zu kürzen</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">5</div>
+                    <div class="step-content">
+                        <h4>Löschen</h4>
+                        <p>Clip auswählen → <span class="kbd">Entf</span> → Lücke schließen mit Rechtsklick</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">6</div>
+                    <div class="step-content">
+                        <h4>Anordnen</h4>
+                        <p>Clips per Drag & Drop in der Timeline verschieben</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 7: Übung 1 -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag uebung">Übung 1</span>
+            <div class="big-number">✂️</div>
+            <h2>Euer erster Schnitt!</h2>
+            <p class="subtitle">Schneidet das Rohmaterial-Video von 2-3 Minuten auf 30-60 Sekunden zusammen.</p>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Video importieren und in die Timeline ziehen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Unwichtige Stellen herausschneiden (Split + Delete)</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Anfang und Ende sauber trimmen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Lücken schließen und Reihenfolge prüfen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Ergebnis in der Vorschau anschauen</span>
+                </div>
+            </div>
+            <div class="highlight-box warning-box" style="margin-top: 20px;">
+                <h4>⏰ Zeit: 30 Minuten</h4>
+                <p>Perfektion ist nicht das Ziel – es geht darum, die Grundfunktionen zu üben!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 8: Texte & Titel -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">CapCut Fortgeschritten</span>
+            <h2>Texte & Titel</h2>
+            <p class="subtitle">Text macht euer Video informativ und professionell</p>
+            <div class="two-col">
+                <div class="col">
+                    <h4>📝 Standardtext</h4>
+                    <ul>
+                        <li>Menü „Text" → „Standardtext"</li>
+                        <li>Doppelklick zum Bearbeiten</li>
+                        <li>Schriftart, Größe, Farbe anpassen</li>
+                        <li>Position im Vorschau-Fenster ziehen</li>
+                        <li>Textdauer in der Timeline anpassen</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>✨ Textanimationen</h4>
+                    <ul>
+                        <li>Text auswählen → „Animation"</li>
+                        <li><strong>Einblendung:</strong> Eintippen, Einfliegen</li>
+                        <li><strong>Ausblendung:</strong> Fade, Ausfliegen</li>
+                        <li><strong>Schleife:</strong> Dauerhafter Effekt</li>
+                        <li>Dauer mit Regler einstellen</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 9: Auto-Captions -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">KI-Feature</span>
+            <h2>💬 Auto-Captions</h2>
+            <p class="subtitle">Automatische Untertitel – DAS Killer-Feature für Social Media!</p>
+            <div class="steps-list">
+                <div class="step-item">
+                    <div class="step-number capcut-num">1</div>
+                    <div class="step-content">
+                        <h4>Menü „Text" → „Auto-Captions"</h4>
+                        <p>Sprache auswählen (Deutsch) und „Erstellen" klicken</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">2</div>
+                    <div class="step-content">
+                        <h4>CapCut analysiert das Audio</h4>
+                        <p>Untertitel werden automatisch als Textblöcke in die Timeline eingefügt</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">3</div>
+                    <div class="step-content">
+                        <h4>Stil anpassen</h4>
+                        <p>Schriftart, Farbe, Größe, Position – dann Rechtsklick → „Stil auf alle anwenden"</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number capcut-num">4</div>
+                    <div class="step-content">
+                        <h4>Text korrigieren</h4>
+                        <p>Doppelklick auf einzelne Untertitel, um Fehler zu korrigieren</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 10: Übergänge & Effekte -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">CapCut Fortgeschritten</span>
+            <h2>Übergänge, Effekte & Speed</h2>
+            <div class="cards-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="card">
+                    <div class="card-icon">🔀</div>
+                    <h4>Übergänge</h4>
+                    <p>Menü „Übergänge" → Zwischen Clips ziehen. Weniger ist mehr!</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🎨</div>
+                    <h4>Filter & Effekte</h4>
+                    <p>Filter für Farbstimmung (50-70% Intensität), Effekte für Dynamik</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h4>Geschwindigkeit</h4>
+                    <p>Slow-Mo (0,5×) für Drama, Speed-Up (2-4×) für Timelapses</p>
+                </div>
+            </div>
+            <div class="highlight-box capcut-box" style="margin-top: 24px;">
+                <h4>🎯 Keyframe-Animationen (Ken-Burns-Effekt)</h4>
+                <p>
+                    <strong>Startpunkt:</strong> Keyframe setzen (◆) bei Skalierung 100%<br>
+                    <strong>Endpunkt:</strong> Skalierung auf 130% → CapCut animiert den Zoom automatisch dazwischen!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 11: Audio & Musik -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">CapCut Fortgeschritten</span>
+            <h2>Audio & Musik 🎵</h2>
+            <div class="two-col">
+                <div class="col">
+                    <h4>🎵 Musik hinzufügen</h4>
+                    <ul>
+                        <li>Eigene Audio-Datei importieren</li>
+                        <li>ODER CapCut Stock-Musik nutzen (Menü → Audio)</li>
+                        <li>Auf Audio-Spur in Timeline ziehen</li>
+                        <li>Trimmen wie Video-Clips</li>
+                    </ul>
+                </div>
+                <div class="col">
+                    <h4>🔧 Audio bearbeiten</h4>
+                    <ul>
+                        <li><strong>Lautstärke:</strong> Musik ~20%, Sprache 100%</li>
+                        <li><strong>Fade-In/Out:</strong> Im rechten Panel</li>
+                        <li><strong>Rauschunterdrückung:</strong> 50-80% Intensität</li>
+                        <li><strong>Hintergrund entfernen (KI)</strong></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box warning-box" style="margin-top: 20px;">
+                <h4>⚠️ Wichtig: Lizenzfreie Musik verwenden!</h4>
+                <p><strong>Pixabay Music</strong> = kommerziell frei (CC0). <strong>YouTube Audio Library</strong> = nur für YouTube-Videos! Für Firmencontent auf anderen Plattformen: Pixabay, Artlist oder Epidemic Sound.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 12: KI Features -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">KI-Features</span>
+            <h2>CapCut <span class="capcut-text">KI-Features</span> ✨</h2>
+            <p class="subtitle">KI spart euch enorm viel Zeit!</p>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <span class="icon">💬</span>
+                    <span><strong>Auto-Captions</strong> – Automatische Untertitel</span>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">🖼️</span>
+                    <span><strong>Hintergrund entfernen</strong> – KI erkennt Personen</span>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">🔇</span>
+                    <span><strong>Rauschunterdrückung</strong> – Audio bereinigen</span>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">🗣️</span>
+                    <span><strong>Sprachverbesserung</strong> – Stimme klarer machen</span>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">🎨</span>
+                    <span><strong>Auto-Reframe</strong> – Seitenverhältnis anpassen</span>
+                </div>
+                <div class="feature-item">
+                    <span class="icon">✨</span>
+                    <span><strong>Enhance</strong> – Videoqualität verbessern</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 13: Übung 2 -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag uebung">Übung 2</span>
+            <div class="big-number">🎨</div>
+            <h2>Video aufwerten!</h2>
+            <p class="subtitle">Nehmt euer Video aus Übung 1 und macht es professionell.</p>
+            <div class="checklist">
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span><strong>Titel/Intro-Text</strong> hinzufügen mit Animation</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span>Mindestens <strong>2 Übergänge</strong> zwischen Clips einfügen</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span><strong>Hintergrundmusik</strong> hinzufügen (Lautstärke ~20%)</span>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-icon">✓</div>
+                    <span><strong>Auto-Captions</strong> generieren und stylen</span>
+                </div>
+            </div>
+            <div class="highlight-box warning-box" style="margin-top: 20px;">
+                <h4>⏰ Zeit: 35 Minuten</h4>
+                <p>Probiert auch die KI-Features aus! Hintergrund entfernen, Rauschunterdrückung, etc.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 18: Abschlussprojekt -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag uebung">Abschlussprojekt</span>
+            <h2>Euer eigenes Video! 🎬</h2>
+            <p class="subtitle">Wählt euer Projekt und setzt alles Gelernte ein</p>
+            <div class="project-options">
+                <div class="project-option">
+                    <div class="po-icon">📱</div>
+                    <h4>Option A</h4>
+                    <p>30-Sek. Social Media Video<br>(Reel / Short)</p>
+                </div>
+                <div class="project-option">
+                    <div class="po-icon">💢</div>
+                    <h4>Option B</h4>
+                    <p>60-Sek. „Über uns"-Firmenvideo</p>
+                </div>
+                <div class="project-option">
+                    <div class="po-icon">🎙️</div>
+                    <h4>Option C</h4>
+                    <p>Interview-Clip aus Riverside + CapCut Feinschliff</p>
+                </div>
+            </div>
+            <div class="highlight-box" style="margin-top: 24px;">
+                <h4>⏰ Eigenständiges Arbeiten: 50 Minuten</h4>
+                <p>Nutzt alles was ihr gelernt habt: Schnitt, Texte, Übergänge, Musik, Auto-Captions, Riverside-Clips. Ich helfe euch individuell!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 19: Export -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">Export</span>
+            <h2>Video exportieren</h2>
+            <p class="subtitle">Die richtigen Einstellungen für jede Plattform</p>
+            <table class="shortcut-table">
+                <thead>
+                    <tr>
+                        <th>Plattform</th>
+                        <th>Seitenverhältnis</th>
+                        <th>Auflösung</th>
+                        <th>Max. Dauer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>📱 Instagram Reel</td>
+                        <td>9:16</td>
+                        <td>1080 × 1920</td>
+                        <td>90 Sek.</td>
+                    </tr>
+                    <tr>
+                        <td>🎵 TikTok</td>
+                        <td>9:16</td>
+                        <td>1080 × 1920</td>
+                        <td>10 Min.</td>
+                    </tr>
+                    <tr>
+                        <td>▶️ YouTube Short</td>
+                        <td>9:16</td>
+                        <td>1080 × 1920</td>
+                        <td>60 Sek.</td>
+                    </tr>
+                    <tr>
+                        <td>▶️ YouTube Video</td>
+                        <td>16:9</td>
+                        <td>1920 × 1080</td>
+                        <td>Unbegrenzt</td>
+                    </tr>
+                    <tr>
+                        <td>📸 Instagram Feed</td>
+                        <td>1:1 / 4:5</td>
+                        <td>1080 × 1080</td>
+                        <td>60 Sek.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="highlight-box capcut-box" style="margin-top: 20px;">
+                <h4>⚡ Export: <span class="kbd">Strg + E</span></h4>
+                <p>Format: <strong>MP4</strong> &nbsp;|&nbsp; Codec: <strong>H.264</strong> &nbsp;|&nbsp; Auflösung: <strong>1080p</strong> &nbsp;|&nbsp; Bildrate: <strong>30 fps</strong> &nbsp;|&nbsp; Qualität: <strong>Hoch</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 20: Shortcuts -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag capcut">Spickzettel</span>
+            <h2>⌨️ CapCut Shortcuts</h2>
+            <table class="shortcut-table">
+                <thead>
+                    <tr>
+                        <th>Shortcut</th>
+                        <th>Funktion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="kbd">Strg + I</span></td><td>Medien importieren</td></tr>
+                    <tr><td><span class="kbd">Strg + B</span></td><td>Clip splitten (an Playhead)</td></tr>
+                    <tr><td><span class="kbd">Entf</span></td><td>Ausgewählten Clip löschen</td></tr>
+                    <tr><td><span class="kbd">Leertaste</span></td><td>Play / Pause</td></tr>
+                    <tr><td><span class="kbd">Strg + Z</span></td><td>Rückgängig</td></tr>
+                    <tr><td><span class="kbd">Strg + Shift + Z</span></td><td>Wiederherstellen</td></tr>
+                    <tr><td><span class="kbd">Strg + E</span></td><td>Video exportieren</td></tr>
+                    <tr><td><span class="kbd">+ / −</span></td><td>Timeline Zoom</td></tr>
+                    <tr><td><span class="kbd">← / →</span></td><td>Frame vor / zurück</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 21: Ressourcen -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide">
+        <div class="slide-inner">
+            <span class="slide-tag">Ressourcen</span>
+            <h2>📚 Weiterführende Links</h2>
+            <p class="subtitle">Zum Weiterlernen und für den Arbeitsalltag</p>
+            <div class="resource-links">
+                <a href="https://www.capcut.com/resource/capcut-tutorial" target="_blank" class="resource-link">
+                    <span class="rl-icon">🎬</span>
+                    <span class="rl-text">CapCut Offizielle Tutorials</span>
+                    <span class="rl-desc">capcut.com</span>
+                </a>
+                <a href="https://riverside.fm/help" target="_blank" class="resource-link">
+                    <span class="rl-icon">🎙️</span>
+                    <span class="rl-text">Riverside Help Center</span>
+                    <span class="rl-desc">riverside.fm</span>
+                </a>
+                <a href="https://studio.youtube.com/channel/audio" target="_blank" class="resource-link">
+                    <span class="rl-icon">🎵</span>
+                    <span class="rl-text">YouTube Audio Library</span>
+                    <span class="rl-desc">⚠️ Nur für YouTube!</span>
+                </a>
+                <a href="https://pixabay.com/music/" target="_blank" class="resource-link">
+                    <span class="rl-icon">🎵</span>
+                    <span class="rl-text">Pixabay Music</span>
+                    <span class="rl-desc">Lizenzfreie Musik</span>
+                </a>
+                <a href="https://www.pexels.com/videos/" target="_blank" class="resource-link">
+                    <span class="rl-icon">📸</span>
+                    <span class="rl-text">Pexels Videos</span>
+                    <span class="rl-desc">Kostenlose Stock-Videos</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <!-- SLIDE 22: Thank You -->
+    <!-- ●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● -->
+    <div class="slide end-slide">
+        <div class="slide-inner">
+            <h1><span class="gradient-text">Danke!</span> 🎉</h1>
+            <div class="decorative-line"></div>
+            <p class="subtitle">Viel Spaß beim Videomachen – ihr habt jetzt das Werkzeug dafür!</p>
+            <div style="margin-top: 40px;">
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Fragen? Feedback? Jederzeit ansprechen!</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // ═══ Slide Management ═══
+    const slides = document.querySelectorAll('.slide');
+    const progressBar = document.getElementById('progressBar');
+    const slideCounter = document.getElementById('slideCounter');
+    const navDotsContainer = document.getElementById('navDots');
+    let currentSlide = 0;
+    let isAnimating = false;
+
+    // Create navigation dots
+    slides.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+        dot.addEventListener('click', () => goToSlide(i));
+        navDotsContainer.appendChild(dot);
+    });
+
+    function updateUI() {
+        // Progress bar
+        const progress = ((currentSlide + 1) / slides.length) * 100;
+        progressBar.style.width = progress + '%';
+
+        // Counter
+        slideCounter.textContent = (currentSlide + 1) + ' / ' + slides.length;
+
+        // Dots
+        document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+            dot.classList.toggle('active', i === currentSlide);
+        });
+    }
+
+    function goToSlide(index) {
+        if (isAnimating || index === currentSlide || index < 0 || index >= slides.length) return;
+        isAnimating = true;
+
+        const direction = index > currentSlide ? 1 : -1;
+        const current = slides[currentSlide];
+        const next = slides[index];
+
+        // Exit current
+        current.classList.remove('active');
+        if (direction > 0) current.classList.add('exit-left');
+        current.style.transform = direction > 0 ? 'translateX(-40px)' : 'translateX(40px)';
+        current.style.opacity = '0';
+
+        // Prepare next slide at off-screen position (no transition yet)
+        next.style.transition = 'none';
+        next.style.transform = direction > 0 ? 'translateX(40px)' : 'translateX(-40px)';
+        next.style.opacity = '0';
+
+        // Force browser to apply the above styles before animating
+        next.offsetHeight;
+
+        // Animate next slide in
+        next.style.transition = '';
+        next.classList.add('active');
+        next.style.transform = 'translateX(0)';
+        next.style.opacity = '1';
+
+        currentSlide = index;
+        updateUI();
+
+        setTimeout(() => {
+            current.classList.remove('exit-left');
+            current.style.transform = '';
+            current.style.opacity = '';
+            next.style.transform = '';
+            next.style.opacity = '';
+            isAnimating = false;
+        }, 500);
+    }
+
+    function nextSlide() {
+        if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+        if (currentSlide > 0) goToSlide(currentSlide - 1);
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            nextSlide();
+        } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+            e.preventDefault();
+            prevSlide();
+        } else if (e.key === 'Home') {
+            e.preventDefault();
+            goToSlide(0);
+        } else if (e.key === 'End') {
+            e.preventDefault();
+            goToSlide(slides.length - 1);
+        }
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) nextSlide();
+            else prevSlide();
+        }
+    }, { passive: true });
+
+    // Initialize
+    updateUI();
+</script>
+
+</body>
+</html>
