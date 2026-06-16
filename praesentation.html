@@ -842,20 +842,20 @@
                 word-wrap: break-word;
             }
 
-            /* Tables: scrollable wrapper, but allow text wrapping in cells */
+            /* Tables: fit to screen, no horizontal scroll */
             .format-table,
             .shortcut-table {
-                display: block;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                font-size: 0.72rem;
+                width: 100%;
+                table-layout: fixed;
+                font-size: 0.7rem;
             }
             .format-table td,
             .format-table th,
             .shortcut-table td,
             .shortcut-table th {
-                padding: 6px 8px;
-                white-space: nowrap;
+                padding: 5px 6px;
+                white-space: normal;
+                word-break: break-word;
             }
 
             .highlight-box { padding: 14px 16px; }
